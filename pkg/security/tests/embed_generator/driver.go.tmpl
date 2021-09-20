@@ -1,0 +1,27 @@
+// Unless explicitly stated otherwise all files in this repository are licensed
+// under the Apache License Version 2.0.
+// This product includes software developed at Datadog (https://www.datadoghq.com/).
+// Copyright 2016-present Datadog, Inc.
+
+// +build !functionaltests,linux
+
+package {{.PkgName}}
+
+import (
+	"testing"
+	"os"
+)
+
+var embeddedTests = []testing.InternalTest{
+	{{- range .TestNames}}
+	{
+		Name: "{{.}}",
+		F:    {{.}},
+	},
+	{{- end}}
+}
+
+func RunEmbeddedTests() {
+	os.Args = []string{"embeddedtester", "-loglevel", "debug", "-test.v"}
+	testing.Main(func(pat, str string) (bool, error) { return true, nil }, embeddedTests, nil, nil)
+}
