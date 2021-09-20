@@ -1,0 +1,82 @@
+---
+# FIXME: our current Gitlab version doesn't support importing a file more than once
+# For now, the workaround is to include "common" files once in the top-level .gitlab-ci.yml file
+# See: https://gitlab.com/gitlab-org/gitlab/-/issues/28987
+# include:
+#   - /.gitlab/docker_common/tag_job_templates.yml
+
+#
+# Image tagging & manifest publication
+#
+
+deploy-a7:
+  extends: .docker_job_definition
+  stage: deploy7
+  rules:
+    !reference [.on_deploy_a7_manual]
+  trigger:
+    project: DataDog/public-images
+    branch: main
+    strategy: depend
+  parallel:
+    matrix:
+      - IMG_SOURCES: ${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-arm64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win1809-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win1909-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win2009-amd64
+        IMG_DESTINATIONS: ${AGENT_REPOSITORY}:${VERSION}
+      - IMG_SOURCES: ${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-arm64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win1809-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win1909-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win2009-amd64
+        IMG_DESTINATIONS: ${AGENT_REPOSITORY}:${VERSION}-jmx
+      - IMG_SOURCES: ${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win1809-servercore-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win1909-servercore-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win2009-servercore-amd64
+        IMG_DESTINATIONS: ${AGENT_REPOSITORY}:${VERSION}-servercore
+      - IMG_SOURCES: ${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win1809-servercore-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win1909-servercore-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win2009-servercore-amd64
+        IMG_DESTINATIONS: ${AGENT_REPOSITORY}:${VERSION}-servercore-jmx
+
+
+deploy-dogstatsd:
+  extends: .docker_job_definition
+  stage: deploy7
+  rules:
+    !reference [.on_deploy_a7_manual]
+  trigger:
+    project: DataDog/public-images
+    branch: main
+    strategy: depend
+  variables:
+    IMG_SOURCES: ${SRC_DSD}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-amd64
+    IMG_DESTINATIONS: ${DSD_REPOSITORY}:${VERSION}
+
+
+#
+# Latest publication
+#
+
+deploy_latest-a7:
+  extends: .docker_job_definition
+  stage: deploy7
+  rules:
+    !reference [.on_deploy_a7_manual]
+  trigger:
+    project: DataDog/public-images
+    branch: main
+    strategy: depend
+  parallel:
+    matrix:
+      - IMG_SOURCES: ${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-arm64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win1809-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win1909-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win2009-amd64
+        IMG_DESTINATIONS: ${AGENT_REPOSITORY}:7,${AGENT_REPOSITORY}:latest
+      - IMG_SOURCES: ${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-arm64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win1809-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win1909-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win2009-amd64
+        IMG_DESTINATIONS: ${AGENT_REPOSITORY}:7-jmx,${AGENT_REPOSITORY}:latest-jmx
+      - IMG_SOURCES: ${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win1809-servercore-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win1909-servercore-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-win2009-servercore-amd64
+        IMG_DESTINATIONS: ${AGENT_REPOSITORY}:7-servercore,${AGENT_REPOSITORY}:latest-servercore
+      - IMG_SOURCES: ${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win1809-servercore-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win1909-servercore-amd64,${SRC_AGENT}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-7-jmx-win2009-servercore-amd64
+        IMG_DESTINATIONS: ${AGENT_REPOSITORY}:7-servercore-jmx,${AGENT_REPOSITORY}:latest-servercore-jmx
+
+deploy_latest-dogstatsd:
+  extends: .docker_job_definition
+  stage: deploy7
+  rules:
+    !reference [.on_deploy_a7_manual]
+  trigger:
+    project: DataDog/public-images
+    branch: main
+    strategy: depend
+  variables:
+    IMG_SOURCES: ${SRC_DSD}:v$CI_PIPELINE_ID-${CI_COMMIT_SHORT_SHA}-amd64
+    IMG_DESTINATIONS: ${DSD_REPOSITORY}:7,${DSD_REPOSITORY}:latest
